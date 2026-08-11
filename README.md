@@ -182,3 +182,9 @@ while True:
 '@ | Out-File -Encoding UTF8 emulator.py
 
 Write-Host "✅ Project built successfully inside folder: agrilogix-platform" -ForegroundColor Green
+
+<img width="525" height="421" alt="download (3)" src="https://github.com/user-attachments/assets/8bb678d0-3d9b-485a-a85f-d1d7f5bbca16" />
+
+
+
+
