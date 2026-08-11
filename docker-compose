@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: agrilogix_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret_agri_password
+      POSTGRES_DB: agrilogix
+    ports:
+      - "5432:5432"
+
+  influx_db:
+    image: influxdb:2.7-alpine
+    container_name: agrilogix_influx
+    restart: always
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=super_secret_influx_password
+      - DOCKER_INFLUXDB_INIT_ORG=agrilogix-corp
+      - DOCKER_INFLUXDB_INIT_BUCKET=telemetry_data
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=your-super-secret-auth-token
