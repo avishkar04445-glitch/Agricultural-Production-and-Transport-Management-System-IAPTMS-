@@ -1,0 +1,44 @@
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const cors = require('cors');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: { origin: "*", methods: ["GET", "POST"] }
+});
+
+io.on('connection', (socket) => {
+    console.log(`🔌 Dashboard interface linked: ${socket.id}`);
+});
+
+const MOISTURE_CRITICAL_LOW = 20.0;
+
+app.post('/api/telemetry/ingest', (req, res) => {
+    try {
+        const { deviceId, type, metrics } = req.body;
+        
+        // Broadcast raw data streams to map and chart interfaces
+        io.emit('telemetry_stream', { deviceId, type, metrics, time: new Date().toLocaleTimeString() });
+
+        // Evaluate safety rules instantly
+        if (type === 'moisture' && metrics.moisture < MOISTURE_CRITICAL_LOW) {
+            io.emit('system_alert', {
+                timestamp: new Date().toLocaleTimeString(),
+                module: 'Production',
+                severity: 'Critical',
+                message: `Field Sector [${deviceId}] moisture dropped to ${metrics.moisture}%! Direct irrigation needed.`
+            });
+        }
+
+        res.status(202).json({ status: 'Data routed successfully.' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+server.listen(5000, () => console.log('🚀 AgriLogix backend pipeline active on port 5000'));
