@@ -1,0 +1,37 @@
+import time
+import random
+import json
+import http.client
+
+API_HOST = "localhost"
+API_PORT = 5000
+
+devices = {
+    "FIELD-SEC-03": {"type": "moisture", "base": 19.0}, # Intentionally low to trigger an instant warning
+    "TRK-088": {"type": "gps", "lat": 20.5937, "lon": 78.9629}
+}
+
+print("🚜 Starting Edge Device Transmitter Loop...")
+
+while True:
+    for dev_id, config in devices.items():
+        payload = {"deviceId": dev_id, "type": config["type"], "metrics": {}}
+        
+        if config["type"] == "moisture":
+            config["base"] += random.uniform(-0.8, 0.5)
+            payload["metrics"] = {"moisture": round(max(0.0, config["base"]), 2)}
+        elif config["type"] == "gps":
+            config["lat"] += random.uniform(-0.02, 0.02)
+            config["lon"] += random.uniform(-0.02, 0.02)
+            payload["metrics"] = {"lat": config["lat"], "lon": config["lon"]}
+            
+        try:
+            conn = http.client.HTTPConnection(API_HOST, API_PORT, timeout=1)
+            conn.request("POST", "/api/telemetry/ingest", json.dumps(payload), {'Content-Type': 'application/json'})
+            conn.getresponse().read()
+            conn.close()
+            print(f"📡 Sent data for {dev_id}")
+        except Exception:
+            print("❌ Backend server offline. Check node application.")
+            
+    time.sleep(2)
